@@ -1,0 +1,1 @@
+# N1---Pr-tica-Integrada-Logs-Seguran-a-Licenciamento-e-Pipeline
