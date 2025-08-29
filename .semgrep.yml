@@ -1,0 +1,87 @@
+rules:
+  # Regras de segurança para Python
+  - id: python.security.audit.log-injection
+    pattern: logger.info(...)
+    message: "Possível injeção de log - verifique se os dados de entrada são sanitizados"
+    severity: WARNING
+    languages: [python]
+
+  - id: python.security.audit.file-path-traversal
+    pattern: open(...)
+    message: "Verifique se o caminho do arquivo é seguro contra directory traversal"
+    severity: WARNING
+    languages: [python]
+
+  - id: python.security.audit.hardcoded-secrets
+    pattern: |
+      $X = "..."
+    message: "Possível credencial hardcoded detectada"
+    severity: WARNING
+    languages: [python]
+
+  - id: python.security.audit.unsafe-deserialization
+    pattern: |
+      pickle.loads(...)
+      yaml.load(...)
+    message: "Deserialização insegura detectada"
+    severity: ERROR
+    languages: [python]
+
+  - id: python.security.audit.sql-injection
+    pattern: |
+      cursor.execute(f"...")
+      cursor.execute("..." + ...)
+    message: "Possível SQL injection detectado"
+    severity: ERROR
+    languages: [python]
+
+  - id: python.security.audit.command-injection
+    pattern: |
+      os.system(...)
+      subprocess.call(...)
+      subprocess.Popen(...)
+    message: "Possível command injection detectado"
+    severity: ERROR
+    languages: [python]
+
+  # Regras de qualidade de código
+  - id: python.best-practices.unused-import
+    pattern: |
+      import $X
+      from $X import $Y
+    message: "Import não utilizado detectado"
+    severity: INFO
+    languages: [python]
+
+  - id: python.best-practices.broad-exception
+    pattern: |
+      except:
+        ...
+    message: "Captura de exceção muito ampla - especifique o tipo de exceção"
+    severity: WARNING
+    languages: [python]
+
+  - id: python.best-practices.assert-in-production
+    pattern: |
+      assert ...
+    message: "Assert não deve ser usado em código de produção"
+    severity: WARNING
+    languages: [python]
+
+  # Regras específicas para logging
+  - id: python.logging.security.sensitive-data
+    pattern: |
+      logger.info({"password": ...})
+      logger.info({"token": ...})
+      logger.info({"secret": ...})
+    message: "Dados sensíveis sendo logados"
+    severity: ERROR
+    languages: [python]
+
+  # Regras para variáveis de ambiente
+  - id: python.security.audit.env-var-default
+    pattern: |
+      os.environ.setdefault($KEY, $VALUE)
+    message: "Verifique se o valor padrão da variável de ambiente é seguro"
+    severity: INFO
+    languages: [python] 
