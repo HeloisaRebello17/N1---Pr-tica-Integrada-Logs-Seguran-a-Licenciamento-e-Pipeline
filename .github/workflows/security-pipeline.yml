@@ -1,0 +1,189 @@
+name: Security Pipeline - Testes, SAST e Licenciamento
+
+on:
+  push:
+    branches: [ main, segurança ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Job 1: Testes e Logs
+  test-and-logs:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install python-jsonlogger ddtrace datadog
+
+    - name: Run tests with logging
+      run: |
+        echo "Executando testes com logs..."
+        python app_corrigido.py
+        echo "Testes concluídos"
+
+    - name: Upload test logs
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-logs
+        path: logs/
+        if-no-files-found: ignore
+
+  # Job 2: Análise SAST com Semgrep
+  sast-analysis:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Semgrep
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/secrets
+          p/owasp-top-ten
+        output-format: sarif
+        output-file: semgrep-results.sarif
+
+    - name: Upload Semgrep results
+      uses: actions/upload-artifact@v3
+      with:
+        name: semgrep-results
+        path: semgrep-results.sarif
+
+    - name: Check for critical vulnerabilities
+      run: |
+        if [ -f semgrep-results.sarif ]; then
+          echo "Verificando vulnerabilidades críticas..."
+          # Conta vulnerabilidades críticas/altas
+          CRITICAL_COUNT=$(jq '.runs[0].results[] | select(.level == "error" or .level == "warning") | .ruleId' semgrep-results.sarif | wc -l)
+          echo "Vulnerabilidades críticas/altas encontradas: $CRITICAL_COUNT"
+          
+          if [ "$CRITICAL_COUNT" -gt 0 ]; then
+            echo "❌ Vulnerabilidades críticas detectadas! Pipeline falhou."
+            exit 1
+          else
+            echo "✅ Nenhuma vulnerabilidade crítica encontrada."
+          fi
+        fi
+
+  # Job 3: Auditoria de Licenciamento
+  license-audit:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install license checker
+      run: |
+        pip install pip-licenses
+
+    - name: Generate license report
+      run: |
+        echo "Gerando relatório de licenças..."
+        pip-licenses --format=markdown --output-file=license-report.md
+        pip-licenses --format=json --output-file=license-report.json
+
+    - name: Check for incompatible licenses
+      run: |
+        echo "Verificando licenças incompatíveis..."
+        
+        # Lista de licenças incompatíveis
+        INCOMPATIBLE_LICENSES=("GPL-3.0" "AGPL-3.0" "LGPL-3.0")
+        
+        if [ -f license-report.json ]; then
+          for license in "${INCOMPATIBLE_LICENSES[@]}"; do
+            COUNT=$(jq ".[] | select(.License == \"$license\") | .Name" license-report.json | wc -l)
+            if [ "$COUNT" -gt 0 ]; then
+              echo "❌ Licença incompatível encontrada: $license"
+              echo "Packages com licença $license:"
+              jq ".[] | select(.License == \"$license\") | .Name" license-report.json
+              exit 1
+            fi
+          done
+          echo "✅ Nenhuma licença incompatível encontrada."
+        fi
+
+    - name: Upload license report
+      uses: actions/upload-artifact@v3
+      with:
+        name: license-report
+        path: |
+          license-report.md
+          license-report.json
+
+  # Job 4: Relatório Final
+  security-report:
+    runs-on: ubuntu-latest
+    needs: [test-and-logs, sast-analysis, license-audit]
+    if: always()
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts/
+
+    - name: Generate security report
+      run: |
+        echo "# Relatório de Segurança - Pipeline Integrado" > security-pipeline-report.md
+        echo "" >> security-pipeline-report.md
+        echo "## Data: $(date)" >> security-pipeline-report.md
+        echo "" >> security-pipeline-report.md
+        
+        # Status dos jobs
+        echo "## Status dos Jobs:" >> security-pipeline-report.md
+        echo "- Testes e Logs: ${{ needs.test-and-logs.result }}" >> security-pipeline-report.md
+        echo "- Análise SAST: ${{ needs.sast-analysis.result }}" >> security-pipeline-report.md
+        echo "- Auditoria de Licenciamento: ${{ needs.license-audit.result }}" >> security-pipeline-report.md
+        echo "" >> security-pipeline-report.md
+        
+        # Resumo de vulnerabilidades
+        if [ -f artifacts/semgrep-results/semgrep-results.sarif ]; then
+          echo "## Vulnerabilidades Encontradas:" >> security-pipeline-report.md
+          jq '.runs[0].results[] | "- " + .ruleId + " (" + .level + ")"' artifacts/semgrep-results/semgrep-results.sarif >> security-pipeline-report.md
+          echo "" >> security-pipeline-report.md
+        fi
+        
+        # Resumo de licenças
+        if [ -f artifacts/license-report/license-report.md ]; then
+          echo "## Licenças Detectadas:" >> security-pipeline-report.md
+          cat artifacts/license-report/license-report.md >> security-pipeline-report.md
+        fi
+
+    - name: Upload final report
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-pipeline-report
+        path: security-pipeline-report.md
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('security-pipeline-report.md', 'utf8');
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## 🔒 Relatório de Segurança\n\n${report}`
+          });

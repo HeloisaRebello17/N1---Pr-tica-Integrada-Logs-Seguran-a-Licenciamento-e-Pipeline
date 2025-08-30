@@ -1,0 +1,49 @@
+rules:
+  # Regras de segurança críticas
+  - id: python.security.audit.critical
+    pattern: |
+      eval(...)
+      exec(...)
+      os.system(...)
+      subprocess.call(...)
+    message: "Operação crítica de segurança detectada"
+    severity: ERROR
+    languages: [python]
+
+  # Regras de injeção
+  - id: python.security.audit.injection
+    pattern: |
+      logger.info(...)
+      logger.error(...)
+      logger.warning(...)
+    message: "Possível injeção de log detectada"
+    severity: WARNING
+    languages: [python]
+
+  # Regras de configuração
+  - id: python.security.audit.config
+    pattern: |
+      os.environ.setdefault($KEY, $VALUE)
+    message: "Configuração de ambiente hardcoded"
+    severity: INFO
+    languages: [python]
+
+  # Regras de secrets
+  - id: python.security.audit.secrets
+    pattern: |
+      password = "..."
+      token = "..."
+      secret = "..."
+      api_key = "..."
+    message: "Possível secret hardcoded"
+    severity: ERROR
+    languages: [python]
+
+  # Regras de validação de entrada
+  - id: python.security.audit.input-validation
+    pattern: |
+      def $FUNC($PARAM):
+        ...
+    message: "Verificar validação de entrada"
+    severity: INFO
+    languages: [python]
