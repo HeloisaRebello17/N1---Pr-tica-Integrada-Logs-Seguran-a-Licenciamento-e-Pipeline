@@ -58,3 +58,6 @@ jobs:
             echo "Semgrep encontrou vulnerabilidades (severity >= ERROR)."
             exit 1
           fi
+          
+        on:
+  workflow_dispatch:
