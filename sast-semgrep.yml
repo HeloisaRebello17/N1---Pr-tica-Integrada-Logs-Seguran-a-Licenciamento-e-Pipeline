@@ -1,16 +1,17 @@
-name: SAST - Semgrep (fail on findings)
+name: SAST - Semgrep (fail on findings + publish reports)
 
 on:
   pull_request:
   push:
     branches: [ main, segurança ]
+  workflow_dispatch:
 
 jobs:
   semgrep:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write   # necessário p/ upload do SARIF
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,29 +20,27 @@ jobs:
         run: |
           pipx install semgrep || pip install semgrep
 
-      # Roda Semgrep com OWASP Top 10; captura o exit code
+      # Rode com as regras que você QUER (OWASP Top 10 + boas práticas de CI)
+      # Se quiser manter seu .semgrep.yml também, adicione --config .semgrep.yml
       - name: Run Semgrep (OWASP Top 10)
-        id: semgrep
+        id: run
         shell: bash
         run: |
           set +e
           semgrep --config "p/owasp-top-ten p/ci" \
-                  --severity ERROR \
                   --sarif --output semgrep.sarif \
-                  --json  --output-json semgrep.json \
+                  --json --output-json semgrep.json \
                   --metrics=off \
                   .
           echo "SEMGREP_EXIT=$?" >> $GITHUB_ENV
           set -e
 
-      # Publica no Code Scanning mesmo se a etapa acima achou problemas
       - name: Upload SARIF to GitHub Code Scanning
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: semgrep.sarif
 
-      # Disponibiliza relatórios como artifact
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -51,13 +50,9 @@ jobs:
             semgrep.sarif
             semgrep.json
 
-      # Falha o job se o Semgrep encontrou issues (exit code != 0)
       - name: Fail if Semgrep found issues
         run: |
           if [ "${SEMGREP_EXIT}" != "0" ]; then
-            echo "Semgrep encontrou vulnerabilidades (severity >= ERROR)."
+            echo "Semgrep encontrou vulnerabilidades (blocking)."
             exit 1
           fi
-          
-        on:
-  workflow_dispatch:
