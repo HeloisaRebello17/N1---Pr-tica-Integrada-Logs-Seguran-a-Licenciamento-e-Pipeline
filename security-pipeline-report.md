@@ -18,19 +18,19 @@
 
 ### Resumo de Segurança:
 - **Total de vulnerabilidades:** 5
-- **Críticas/Altas:** 0 ✅
-- **Médias:** 0 ✅
-- **Baixas:** 4 ⚠️
-- **Informacionais:** 1 ℹ️
+- **Críticas/Altas:** 0 
+- **Médias:** 0 
+- **Baixas:** 4 
+- **Informacionais:** 1 
 
 ## Licenças Detectadas:
 
 ### Dependências Analisadas:
-1. **python-json-logger** (v2.0.7) - MIT License ✅
-2. **ddtrace** (v1.20.4) - Apache License 2.0 ✅
-3. **datadog** (v0.44.0) - Apache License 2.0 ✅
-4. **semgrep** (v1.134.0) - LGPL-2.1 ⚠️
-5. **pip-licenses** (v4.3.0) - MIT License ✅
+1. **python-json-logger** (v2.0.7) - MIT License 
+2. **ddtrace** (v1.20.4) - Apache License 2.0 
+3. **datadog** (v0.44.0) - Apache License 2.0 
+4. **semgrep** (v1.134.0) - LGPL-2.1 
+5. **pip-licenses** (v4.3.0) - MIT License 
 
 ### Status das Licenças:
 - **Licenças compatíveis:** 4 (80%)
@@ -53,10 +53,10 @@
 
 ## Conclusão:
 
-✅ **Pipeline executado com sucesso**
-✅ **Nenhuma vulnerabilidade crítica encontrada**
-✅ **Licenças compatíveis para uso comercial**
-⚠️ **Atenção necessária para melhorias de segurança**
+ **Pipeline executado com sucesso**
+ **Nenhuma vulnerabilidade crítica encontrada**
+ **Licenças compatíveis para uso comercial**
+ **Atenção necessária para melhorias de segurança**
 
 ---
 *Relatório gerado automaticamente pelo GitHub Actions*
