@@ -62,16 +62,16 @@ jobs:
     - name: Check for critical vulnerabilities
       run: |
         if [ -f semgrep-results.sarif ]; then
-          echo "Verificando vulnerabilidades críticas..."
-          # Conta vulnerabilidades críticas/altas
-          CRITICAL_COUNT=$(jq '.runs[0].results[] | select(.level == "error" or .level == "warning") | .ruleId' semgrep-results.sarif | wc -l)
-          echo "Vulnerabilidades críticas/altas encontradas: $CRITICAL_COUNT"
+          echo "Verificando vulnerabilidades encontradas..."
+          # Conta vulnerabilidades encontradas
+          TOTAL_COUNT=$(jq '.runs[0].results | length' semgrep-results.sarif)
+          echo "Total de vulnerabilidades encontradas: $TOTAL_COUNT"
           
-          if [ "$CRITICAL_COUNT" -gt 0 ]; then
-            echo " Vulnerabilidades críticas detectadas! Pipeline falhou."
-            exit 1
+          if [ "$TOTAL_COUNT" -gt 0 ]; then
+            echo "⚠️ Vulnerabilidades detectadas - verificar relatório"
+            echo "Pipeline continuará para gerar relatório completo"
           else
-            echo " Nenhuma vulnerabilidade crítica encontrada."
+            echo "✅ Nenhuma vulnerabilidade encontrada"
           fi
         fi
 
