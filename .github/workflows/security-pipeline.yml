@@ -45,13 +45,12 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Run Semgrep
-      uses: returntocorp/semgrep-action@v3
+      uses: returntocorp/semgrep-action@v1
       with:
         config: >-
           p/security-audit
           p/secrets
           p/owasp-top-ten
-        fail-on: never
 
     - name: Upload Semgrep results
       uses: actions/upload-artifact@v4
