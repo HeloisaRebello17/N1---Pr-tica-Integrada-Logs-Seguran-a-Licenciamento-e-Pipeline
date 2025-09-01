@@ -1,0 +1,42 @@
+[
+  {
+    "Name": "python-json-logger",
+    "Version": "2.0.7",
+    "License": "MIT",
+    "Author": "madisonmay",
+    "URL": "https://github.com/madisonmay/python-json-logger",
+    "Description": "A python library adding a json log formatter"
+  },
+  {
+    "Name": "ddtrace",
+    "Version": "1.20.4",
+    "License": "Apache-2.0",
+    "Author": "Datadog, Inc.",
+    "URL": "https://github.com/DataDog/dd-trace-py",
+    "Description": "Datadog Python APM client library"
+  },
+  {
+    "Name": "datadog",
+    "Version": "0.44.0",
+    "License": "Apache-2.0",
+    "Author": "Datadog, Inc.",
+    "URL": "https://github.com/DataDog/datadogpy",
+    "Description": "The Datadog Python library"
+  },
+  {
+    "Name": "semgrep",
+    "Version": "1.134.0",
+    "License": "LGPL-2.1",
+    "Author": "Semgrep Inc.",
+    "URL": "https://github.com/semgrep/semgrep",
+    "Description": "Lightweight static analysis for many languages"
+  },
+  {
+    "Name": "pip-licenses",
+    "Version": "4.3.0",
+    "License": "MIT",
+    "Author": "raimon49",
+    "URL": "https://github.com/raimon49/pip-licenses",
+    "Description": "Dump the license of a installed python package"
+  }
+]
